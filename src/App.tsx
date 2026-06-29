@@ -137,14 +137,19 @@ function App() {
 
   // Handle start/stop camera actions respecting browser privacy policies
   const handleToggleCamera = () => {
+    console.log("[DEBUG] 1. Enable Webcam button clicked! Current isCameraActive state:", isCameraActive);
+    console.log("[DEBUG] DOM Refs check - Video Ref:", videoRef.current, "Canvas Ref:", canvasRef.current);
+    
     if (isCameraActive) {
+      console.log("[DEBUG] Stopping webcam stream...");
       stopCamera();
     } else {
-      setTimeout(() => {
-        if (videoRef.current && canvasRef.current) {
-          startCamera(videoRef.current, canvasRef.current);
-        }
-      }, 50);
+      if (videoRef.current && canvasRef.current) {
+        console.log("[DEBUG] Refs exist, calling startCamera...");
+        startCamera(videoRef.current, canvasRef.current);
+      } else {
+        console.warn("[DEBUG] Error: Cannot start camera, video/canvas DOM refs are NULL!");
+      }
     }
   };
 
@@ -509,22 +514,27 @@ function App() {
                 </div>
               )}
 
-              {isCameraActive ? (
+              {/* Real WebCam Video Feed - always rendered to keep Ref populated */}
+              <video
+                ref={videoRef}
+                className={`absolute inset-0 w-full h-full object-cover scale-x-[-1] z-0 ${
+                  isCameraActive ? 'block' : 'hidden pointer-events-none'
+                }`}
+                muted
+                playsInline
+              />
+
+              {/* HTML5 Overlay Canvas - always rendered to keep Ref populated */}
+              <canvas
+                ref={canvasRef}
+                className={`absolute inset-0 w-full h-full object-cover z-10 pointer-events-none ${
+                  isCameraActive ? 'block' : 'hidden'
+                }`}
+              />
+
+              {/* Camera Tracking Elements */}
+              {isCameraActive && (
                 <>
-                  {/* Real WebCam Video Feed */}
-                  <video
-                    ref={videoRef}
-                    className="absolute inset-0 w-full h-full object-cover scale-x-[-1]"
-                    muted
-                    playsInline
-                  />
-
-                  {/* HTML5 Overlay Canvas for drawing tracking wireframes */}
-                  <canvas
-                    ref={canvasRef}
-                    className="absolute inset-0 w-full h-full object-cover z-10 pointer-events-none"
-                  />
-
                   {/* Visual tracking crosshair for the pointer */}
                   <div 
                     className={`absolute w-8 h-8 rounded-full border-2 transition-all duration-100 pointer-events-none flex items-center justify-center -translate-x-1/2 -translate-y-1/2 z-20 ${
@@ -540,7 +550,10 @@ function App() {
                     <Hand className={`w-3.5 h-3.5 ${isPinchActive ? 'text-emerald-300 animate-pulse' : 'text-purple-300'}`} />
                   </div>
                 </>
-              ) : (
+              )}
+
+              {/* Idle Overlay when camera is stopped */}
+              {!isCameraActive && (
                 <>
                   {/* Idle/Simulated State Overlay */}
                   <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff03_1px,transparent_1px),linear-gradient(to_bottom,#ffffff03_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />

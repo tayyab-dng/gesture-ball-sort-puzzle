@@ -80,7 +80,7 @@ export function useHandTracker() {
       setError(null);
       
       // Request video with standard constraints
-      console.log('Requesting webcam access with standard constraints...');
+      console.log("[DEBUG] 2. Requesting getUserMedia...");
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { width: 640, height: 480 }
       });
@@ -112,12 +112,13 @@ export function useHandTracker() {
       await metadataLoaded;
 
       setIsCameraActive(true);
+      console.log("[DEBUG] 3. Camera stream acquired!");
       console.log('Webcam active. Initializing MediaPipe loop...');
       
       // Start processing frame loops only after metadata is loaded and video is active
       requestRef.current = requestAnimationFrame(predictFrame);
     } catch (err: any) {
-      console.error('Webcam initialization failed with error:', err);
+      console.error("[DEBUG] 4. Camera failed:", err);
       setError(`Camera access failed: ${err.message || err.name || 'Permission Denied'}`);
       setIsCameraActive(false);
     }
