@@ -21,6 +21,7 @@ export function useHandTracker() {
   const streamRef = useRef<MediaStream | null>(null);
   const requestRef = useRef<number | null>(null);
   const prevCoordsRef = useRef({ x: 50, y: 50 });
+  const pinchActiveRef = useRef(false);
 
   // Initialize MediaPipe Hand Landmarker on mount
   useEffect(() => {
@@ -201,13 +202,28 @@ export function useHandTracker() {
         // Normalize distance by hand size to prevent scale issues
         const normalizedPinchRatio = distance3d / handScale;
 
-        // Calibrated threshold for pinch detection: ratio < 0.20
-        const isPinching = normalizedPinchRatio < 0.20;
+        // Hysteresis threshold logic to prevent sticky releases
+        const PINCH_START_THRESHOLD = 0.16;   // Requires closer fingers to initiate Grab
+        const PINCH_RELEASE_THRESHOLD = 0.26; // Allows relaxed fingers before Drop
+        
+        let isPinching = pinchActiveRef.current;
+        if (isPinching) {
+          if (normalizedPinchRatio > PINCH_RELEASE_THRESHOLD) {
+            isPinching = false;
+          }
+        } else {
+          if (normalizedPinchRatio < PINCH_START_THRESHOLD) {
+            isPinching = true;
+          }
+        }
 
-        if (isPinching !== pinchActive) {
+        if (isPinching !== pinchActiveRef.current) {
+          pinchActiveRef.current = isPinching;
           setPinchActive(isPinching);
           if (isPinching) {
-            console.log('PINCH DETECTED');
+            console.log('[DEBUG] 3. PINCH DETECTED');
+          } else {
+            console.log('[DEBUG] 3. PINCH RELEASED');
           }
         }
 
