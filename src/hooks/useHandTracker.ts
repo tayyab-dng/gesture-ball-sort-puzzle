@@ -79,36 +79,46 @@ export function useHandTracker() {
     try {
       setError(null);
       
-      // Request webcam with optimal resolution and frame rate
+      // Request video with standard constraints
+      console.log('Requesting webcam access with standard constraints...');
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          width: { ideal: 640 },
-          height: { ideal: 480 },
-          facingMode: 'user'
-        },
-        audio: false
+        video: { width: 640, height: 480 }
       });
 
       streamRef.current = stream;
       videoElement.srcObject = stream;
       
-      // Play video once metadata is loaded
-      videoElement.onloadedmetadata = () => {
-        videoElement.play();
-        setIsCameraActive(true);
-        
-        // Match canvas dimensions to video aspect ratios
-        if (canvasElement) {
-          canvasElement.width = videoElement.videoWidth;
-          canvasElement.height = videoElement.videoHeight;
-        }
+      // Set properties to satisfy browser mobile/autoplay policies
+      videoElement.playsInline = true;
+      videoElement.muted = true;
+      
+      // Promise to coordinate metadata loading
+      const metadataLoaded = new Promise<void>((resolve) => {
+        videoElement.onloadedmetadata = () => {
+          console.log('Video metadata loaded. Dimensions:', videoElement.videoWidth, 'x', videoElement.videoHeight);
+          if (canvasElement) {
+            canvasElement.width = videoElement.videoWidth;
+            canvasElement.height = videoElement.videoHeight;
+          }
+          resolve();
+        };
+      });
 
-        // Start processing frame loops
-        requestRef.current = requestAnimationFrame(predictFrame);
-      };
-    } catch (err) {
-      console.error('Webcam initialization failed:', err);
-      setError('Camera access denied or device not found.');
+      // Crucial Fix: Call play() after attaching the stream to srcObject
+      console.log('Invoking video.play()...');
+      await videoElement.play();
+      
+      // Wait for metadata (dimensions) to be ready
+      await metadataLoaded;
+
+      setIsCameraActive(true);
+      console.log('Webcam active. Initializing MediaPipe loop...');
+      
+      // Start processing frame loops only after metadata is loaded and video is active
+      requestRef.current = requestAnimationFrame(predictFrame);
+    } catch (err: any) {
+      console.error('Webcam initialization failed with error:', err);
+      setError(`Camera access failed: ${err.message || err.name || 'Permission Denied'}`);
       setIsCameraActive(false);
     }
   };
