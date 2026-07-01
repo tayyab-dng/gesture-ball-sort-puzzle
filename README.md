@@ -39,3 +39,26 @@ To run this project locally, ensure you have Node.js installed.
 1. Clone the repository:
    ```bash
    git clone [https://github.com/tayyab-dng/gesture-ball-sort-puzzle.git](https://github.com/tayyab-dng/gesture-ball-sort-puzzle.git)
+Navigate into the directory:
+
+Bash
+cd gesture-ball-sort-puzzle
+Install dependencies:
+
+Bash
+npm install
+Start the Vite development server:
+
+Bash
+npm run dev
+Open your browser and navigate to http://localhost:5173/. Click "Enable Webcam" to start!
+
+👨‍💻 Author
+Tayyab Safdar AI-Augmented Full-Stack & Mobile Developer
+
+LinkedIn (https://www.linkedin.com/in/tayyabdng/)
+
+GitHub
+
+📄 License
+This project is open-source and available under the MIT License.
